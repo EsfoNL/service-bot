@@ -47,7 +47,7 @@ fn check_status() -> String {
     out.clear();
     for service in CFG.services.iter() {
         let status = std::process::Command::new("systemctl")
-            .args(["status", service])
+            .args(["is-active", service])
             .status()
             .map(|e| e.success())
             .unwrap_or(false);
