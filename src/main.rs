@@ -2,17 +2,13 @@ use std::{
     collections::HashMap,
     fs::File,
     io::Write,
-    ops::DerefMut,
-    path::{Path, PathBuf},
-    sync::{LazyLock, Mutex, RwLock},
-    thread::sleep,
-    time::Duration,
+    sync::{LazyLock, RwLock},
 };
 
 use serde::{Deserialize, Serialize};
 use serenity::all::{
-    Activity, ActivityData, ClientBuilder, Command, CommandInteraction, CommandOptionType,
-    CommandType, Context, CreateAutocompleteResponse, CreateCommand, CreateCommandOption,
+    ClientBuilder, Command, CommandInteraction, CommandOptionType, CommandType, Context,
+    CreateAutocompleteResponse, CreateCommand, CreateCommandOption,
     CreateInteractionResponseMessage, EventHandler, GatewayIntents, Interaction, Ready,
 };
 
@@ -211,6 +207,17 @@ impl EventHandler for Handler {
                         .await;
                 }
                 "add_service" => {
+                    if cmd.user
+                        != ctx
+                            .http
+                            .get_current_application_info()
+                            .await
+                            .unwrap()
+                            .owner
+                            .unwrap()
+                    {
+                        return;
+                    }
                     let Some(service) = cmd
                         .data
                         .options
