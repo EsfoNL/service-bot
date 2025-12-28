@@ -23,7 +23,7 @@ async fn run_cmd(action: &str, service: &str) -> Result<String, String> {
         .output()
         .await
     {
-        Ok(_) => Ok(String::from("Success!")),
+        Ok(_) => Ok(format!("Successfully ran `/service {action} {service}`")),
         Err(v) => Err(format!("error occurred: `{}`", v)),
     }
 }
