@@ -368,10 +368,13 @@ const fn server_cfg_location() -> &'static str {
     }
 }
 static SERVERS_CFG: LazyLock<RwLock<ServersCfg>> = LazyLock::new(|| {
-    toml::from_str::<ServersCfg>(
-        &std::fs::read_to_string(server_cfg_location()).unwrap_or_default(),
-    )
-    .unwrap_or_default()
+    {
+        let cfg = toml::from_str::<ServersCfg>(
+            &std::fs::read_to_string(server_cfg_location()).unwrap_or_default(),
+        )
+        .unwrap_or_default();
+        dbg!(cfg)
+    }
     .into()
 });
 
