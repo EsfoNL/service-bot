@@ -174,7 +174,8 @@ impl EventHandler for Handler {
                         "service",
                         "the service to retrieve the logs of",
                     )
-                    .required(true),
+                    .required(true)
+                    .set_autocomplete(true),
                 ),
         )
         .await
