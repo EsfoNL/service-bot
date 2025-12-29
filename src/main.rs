@@ -217,7 +217,7 @@ async fn cmd_logs(ctx: &Context, cmd: CommandInteraction) {
         return;
     }
     let command = std::process::Command::new("journalctl")
-        .args(["-u", service])
+        .args(["-u", service, "-n", "10", "-o", "cat"])
         .output();
 
     let _ = match command {
