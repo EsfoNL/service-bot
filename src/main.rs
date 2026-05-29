@@ -252,7 +252,7 @@ async fn cmd_logs(ctx: &Context, cmd: CommandInteraction) {
 
 async fn cmd_autocomplete(ctx: &Context, cmd: CommandInteraction) {
     if cmd.data.autocomplete().unwrap().name == "service" {
-        if cmd.data.name == "add_command" {
+        if cmd.data.name == "add_service" {
             cmd.create_response(
                 &ctx,
                 CreateInteractionResponse::Autocomplete({
