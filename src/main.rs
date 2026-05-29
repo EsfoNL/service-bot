@@ -259,7 +259,8 @@ async fn cmd_autocomplete(ctx: &Context, cmd: CommandInteraction) {
                     CreateAutocompleteResponse::new().set_choices(get_systemd_choices().await)
                 }),
             )
-            .await;
+            .await
+            .unwrap();
             return;
         }
         let _ = cmd
@@ -279,7 +280,8 @@ async fn cmd_autocomplete(ctx: &Context, cmd: CommandInteraction) {
                     opts
                 }),
             )
-            .await;
+            .await
+            .unwrap();
     }
 }
 
