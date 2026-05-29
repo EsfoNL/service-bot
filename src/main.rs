@@ -296,7 +296,7 @@ struct SystemDService {
 async fn get_systemd_choices(query: &str) -> Vec<AutocompleteChoice> {
     let options = serde_json::from_str::<Vec<SystemDService>>(&String::from_utf8_lossy(
         &tokio::process::Command::new("systemctl")
-            .args(&["list-units", "--type=service", "--output=json"])
+            .args(&["list-units", "--type=service", "--output=json", "--all"])
             .output()
             .await
             .unwrap()
@@ -315,10 +315,15 @@ async fn get_systemd_choices(query: &str) -> Vec<AutocompleteChoice> {
         nucleo_matcher::pattern::AtomKind::Fuzzy,
         true,
     )
-    .match_list(options.into_iter().map(|e| e.unit), &mut matcher)
+    .match_list(
+        options
+            .iter()
+            .map(|e| &e.unit[..e.unit.len() - ".service".len()]),
+        &mut matcher,
+    )
     .into_iter()
     .take(25)
-    .map(|e| AutocompleteChoice::new(e.0.clone(), e.0))
+    .map(|e| AutocompleteChoice::new(e.0, e.0))
     .collect()
 }
 
