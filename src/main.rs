@@ -5,6 +5,7 @@ use std::{
     sync::{LazyLock, RwLock},
 };
 
+use nucleo_matcher::{Matcher, pattern::Atom};
 use serde::{Deserialize, Serialize};
 use serenity::all::{
     AutocompleteChoice, ClientBuilder, Command, CommandInteraction, CommandOptionType, CommandType,
@@ -256,7 +257,9 @@ async fn cmd_autocomplete(ctx: &Context, cmd: CommandInteraction) {
             cmd.create_response(
                 &ctx,
                 CreateInteractionResponse::Autocomplete({
-                    CreateAutocompleteResponse::new().set_choices(get_systemd_choices().await)
+                    CreateAutocompleteResponse::new().set_choices(
+                        get_systemd_choices(cmd.data.autocomplete().unwrap().value).await,
+                    )
                 }),
             )
             .await
@@ -290,8 +293,8 @@ struct SystemDService {
     unit: String,
 }
 
-async fn get_systemd_choices() -> Vec<AutocompleteChoice> {
-    serde_json::from_str::<Vec<SystemDService>>(&String::from_utf8_lossy(
+async fn get_systemd_choices(query: &str) -> Vec<AutocompleteChoice> {
+    let options = serde_json::from_str::<Vec<SystemDService>>(&String::from_utf8_lossy(
         &tokio::process::Command::new("systemctl")
             .args(&["list-units", "--type=service", "--output=json"])
             .output()
@@ -299,9 +302,23 @@ async fn get_systemd_choices() -> Vec<AutocompleteChoice> {
             .unwrap()
             .stdout,
     ))
-    .unwrap()
+    .unwrap();
+    // .into_iter()
+    // .map(|e| AutocompleteChoice::new(e.unit.clone(), e.unit))
+    // .collect()
+    //
+    let mut matcher = Matcher::default();
+    Atom::new(
+        query,
+        nucleo_matcher::pattern::CaseMatching::Smart,
+        nucleo_matcher::pattern::Normalization::Smart,
+        nucleo_matcher::pattern::AtomKind::Fuzzy,
+        true,
+    )
+    .match_list(options.into_iter().map(|e| e.unit), &mut matcher)
     .into_iter()
-    .map(|e| AutocompleteChoice::new(e.unit.clone(), e.unit))
+    .take(25)
+    .map(|e| AutocompleteChoice::new(e.0.clone(), e.0))
     .collect()
 }
 
