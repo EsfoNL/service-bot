@@ -7,9 +7,10 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use serenity::all::{
-    ClientBuilder, Command, CommandInteraction, CommandOptionType, CommandType, Context,
-    CreateAutocompleteResponse, CreateCommand, CreateCommandOption, CreateInteractionResponse,
-    CreateInteractionResponseMessage, EventHandler, GatewayIntents, Interaction, Ready,
+    AutocompleteChoice, ClientBuilder, Command, CommandInteraction, CommandOptionType, CommandType,
+    Context, CreateAutocompleteResponse, CreateCommand, CreateCommandOption,
+    CreateInteractionResponse, CreateInteractionResponseMessage, EventHandler, GatewayIntents,
+    Interaction, Ready,
 };
 
 #[derive(Deserialize)]
@@ -251,6 +252,16 @@ async fn cmd_logs(ctx: &Context, cmd: CommandInteraction) {
 
 async fn cmd_autocomplete(ctx: &Context, cmd: CommandInteraction) {
     if cmd.data.autocomplete().unwrap().name == "service" {
+        if cmd.data.name == "add_command" {
+            cmd.create_response(
+                &ctx,
+                CreateInteractionResponse::Autocomplete({
+                    CreateAutocompleteResponse::new().set_choices(get_systemd_choices().await)
+                }),
+            )
+            .await;
+            return;
+        }
         let _ = cmd
             .create_response(
                 &ctx,
@@ -270,6 +281,26 @@ async fn cmd_autocomplete(ctx: &Context, cmd: CommandInteraction) {
             )
             .await;
     }
+}
+
+#[derive(Deserialize)]
+struct SystemDService {
+    unit: String,
+}
+
+async fn get_systemd_choices() -> Vec<AutocompleteChoice> {
+    serde_json::from_str::<Vec<SystemDService>>(&String::from_utf8_lossy(
+        &tokio::process::Command::new("systemctl")
+            .args(&["list-units", "--type=service", "--output=json"])
+            .output()
+            .await
+            .unwrap()
+            .stdout,
+    ))
+    .unwrap()
+    .into_iter()
+    .map(|e| AutocompleteChoice::new(e.unit.clone(), e.unit))
+    .collect()
 }
 
 async fn cmd_add_service(ctx: &Context, cmd: CommandInteraction) {
